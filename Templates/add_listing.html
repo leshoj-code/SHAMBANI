@@ -1,0 +1,35 @@
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<div id="map" style="height: 400px; width: 100%;"></div>
+
+<form method="POST">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-success">Post Equipment</button>
+</form>
+
+<script>
+    // 1. Initialize the map (Centered on Nairobi)
+    var map = L.map('map').setView([-1.286389, 36.817223], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+    var marker;
+
+    // 2. Capture the Click
+    map.on('click', function(e) {
+        var lat = e.latlng.lat;
+        var lng = e.latlng.lng;
+
+        // Add/Move the marker so the user sees where they clicked
+        if (marker) {
+            marker.setLatLng(e.latlng);
+        } else {
+            marker = L.marker(e.latlng).addTo(map);
+        }
+
+        // 3. Inject into the Hidden Django Field
+        // PointField expects "POINT(longitude latitude)"
+        document.getElementById('id_location').value = "POINT(" + lng + " " + lat + ")";
+    });
+</script>
