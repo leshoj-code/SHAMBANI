@@ -1,0 +1,61 @@
+{% extends 'starter.html' %}
+
+{% block content %}
+<div class="card shadow-sm border-0 rounded-4 mb-4">
+    <div class="card-body p-3">
+        <div class="row g-2 align-items-center">
+            <div class="col-md-5">
+                <input type="text" id="nameSearch" class="form-control rounded-pill" placeholder="Search equipment name (e.g. Massey)...">
+            </div>
+            <div class="col-md-4">
+                <select id="typeFilter" class="form-select rounded-pill">
+                    <option value="">All Equipment Types</option>
+                    <option value="Tractor">Tractors</option>
+                    <option value="Water Pump">Water Pumps</option>
+                    <option value="Harvester">Harvesters</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button onclick="filterMap()" class="btn btn-success w-100 rounded-pill shadow-sm">🔍 Filter Map</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="map" style="height: 600px; min-height: 600px; width: 100%; border-radius: 20px; z-index: 1;" class="shadow-lg"></div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        if (typeof L !== 'undefined') {
+            var map = L.map('map').setView([-1.286389, 36.817223], 12);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+
+            var allItems = {{ equipment_json|safe }};
+            var markerLayer = L.layerGroup().addTo(map);
+
+            function displayMarkers(data) {
+                markerLayer.clearLayers();
+                data.forEach(function(item) {
+                    var marker = L.marker([item.lat, item.lng]);
+                    marker.bindPopup("<b>" + item.name + "</b><br>KES " + item.price);
+                    marker.addTo(markerLayer);
+                });
+            }
+
+            displayMarkers(allItems);
+
+            if (data.length > 0) {
+            var group = new L.featureGroup(markerLayer.getLayers());
+            map.fitBounds(group.getBounds().pad(0.1)); 
+}
+            
+            setTimeout(function(){ map.invalidateSize()}, 500);
+        } else {
+            console.error("Leaflet (L) failed to load. Check your internet connection or script tags.");
+        }
+    });
+</script>
+{% endblock %}

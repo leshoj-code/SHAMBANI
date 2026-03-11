@@ -1,0 +1,88 @@
+{% extends 'starter.html' %}
+
+{% block content %}
+<div class="p-5 mb-5 bg-success text-white rounded-4 shadow-lg border-0 position-relative">
+    <div class="row align-items-center">
+        <div class="col-lg-7">
+            <h1 class="display-4 fw-bold mb-2">Shamba Dashboard</h1>
+            <p class="fs-5 opacity-75 mb-4">Tracking your fleet across the fields of Kenya.</p>
+            <div class="d-flex gap-2">
+                <a href="{% url 'add_equipment' %}" class="btn btn-light btn-lg px-4 rounded-pill fw-bold text-success">Add Equipment</a>
+                <a href="{% url 'map_view' %}" class="btn btn-outline-light btn-lg px-4 rounded-pill">View All on Map</a>
+            </div>
+        </div>
+        <div class="col-lg-5 mt-4 mt-lg-0">
+            <div class="bg-white bg-opacity-10 p-4 rounded-4 backdrop-blur border border-white border-opacity-25">
+                <div class="row g-3">
+                    <div class="col-6">
+                        <small class="text-uppercase opacity-75 fw-bold">Active Now</small>
+                        <h2 class="display-6 fw-bold m-0">{{ active_count }}</h2>
+                    </div>
+                    <div class="col-6 text-end">
+                        <small class="text-uppercase opacity-75 fw-bold">Idle Units</small>
+                        <h2 class="display-6 fw-bold m-0 text-warning">{{ idle_count }}</h2>
+                    </div>
+                </div>
+                <hr class="my-3 opacity-25">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>Total Fleet Value</span>
+                    <span class="fw-bold">High Growth 📈</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container mb-5">
+    <div class="d-flex justify-content-between align-items-end mb-4">
+        <div>
+            <h2 class="fw-bold m-0 text-dark">Currently in the Field</h2>
+            <p class="text-muted m-0">Equipment currently generating revenue.</p>
+        </div>
+        <span class="badge bg-light text-success border border-success border-opacity-25 px-3 py-2">Live Status</span>
+    </div>
+
+    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
+        {% for unit in active_units %}
+        <div class="col">
+            <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="bg-success bg-opacity-10 p-2 rounded-3">
+                            🚜
+                        </div>
+                        <span class="badge rounded-pill bg-warning text-dark px-3">In Use</span>
+                    </div>
+                    <h5 class="card-title fw-bold mb-1">{{ unit.name }}</h5>
+                    <p class="text-muted small mb-3">Renter: <span class="text-dark fw-semibold">{{ unit.current_renter }}</span></p>
+                    
+                    <div class="d-flex justify-content-between align-items-center mt-auto">
+                        <span class="text-success fw-bold">KES {{ unit.price_per_hour }}/hr</span>
+                        <a href="{% url 'toggle_status' unit.pk %}" class="btn btn-sm btn-outline-success rounded-pill px-3">Mark Returned</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="text-center py-5 bg-light rounded-4 border-2 border-dashed">
+                <p class="text-muted mb-0">No equipment is currently rented out. Go to the <a href="{% url 'map_view' %}" class="text-success fw-bold">Map View</a> to find customers.</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="bg-light p-4 rounded-4 mb-5 d-flex align-items-center justify-content-between border border-secondary border-opacity-10">
+    <div class="d-flex align-items-center">
+        <div class="display-6 me-3">🌦️</div>
+        <div>
+            <h5 class="fw-bold m-0 text-dark">Nairobi Weather Update</h5>
+            <p class="text-muted m-0 small">Scattered showers. Ideal for planting, but check tractor traction.</p>
+        </div>
+    </div>
+    <div class="text-end">
+        <span class="badge bg-dark rounded-pill px-3">Smart Advice</span>
+    </div>
+</div>
+{% endblock %}

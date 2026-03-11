@@ -19,3 +19,8 @@ class Equipment(models.Model):
 
     def __str__(self):
         return f"{self.name} - {self.location.y}, {self.location.x}"
+    
+    is_rented = models.BooleanField(default=False) 
+    # Who is renting it?
+    current_renter = models.CharField(max_length=100, blank=True, null=True)
+    

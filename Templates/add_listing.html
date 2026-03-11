@@ -1,35 +1,65 @@
+{% extends 'starter.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-lg border-0 rounded-4">
+            <div class="card-body p-4">
+                <h2 class="text-success fw-bold mb-3">List Your Equipment</h2>
+                <p class="text-muted">Tap the map to set the exact location of your tractor or pump.</p>
+                
+                <div id="map" style="height: 300px; width: 100%; border-radius: 12px;" class="mb-4 shadow-sm"></div>
+
+                <form method="POST" class="needs-validation">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Equipment Name</label>
+                        <input type="text" name="name" class="form-control form-control-lg" placeholder="e.g. Massey Ferguson 375" required>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <label class="form-label fw-semibold">Type</label>
+                            <select name="type" class="form-select">
+                                <option value="tractor">Tractor</option>
+                                <option value="pump">Water Pump</option>
+                                <option value="harvester">Harvester</option>
+                            </select>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label class="form-label fw-semibold">Price (KES/hr)</label>
+                            <input type="number" name="price_per_hour" class="form-control" placeholder="2500" required>
+                        </div>
+                    </div>
+
+                    {{ form.location }}
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success btn-lg rounded-pill shadow">
+                            🚀 Post to ShambaShare
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
-<div id="map" style="height: 400px; width: 100%;"></div>
-
-<form method="POST">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn btn-success">Post Equipment</button>
-</form>
-
 <script>
-    // 1. Initialize the map (Centered on Nairobi)
     var map = L.map('map').setView([-1.286389, 36.817223], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
     var marker;
-
-    // 2. Capture the Click
     map.on('click', function(e) {
-        var lat = e.latlng.lat;
-        var lng = e.latlng.lng;
-
-        // Add/Move the marker so the user sees where they clicked
-        if (marker) {
-            marker.setLatLng(e.latlng);
-        } else {
-            marker = L.marker(e.latlng).addTo(map);
-        }
-
-        // 3. Inject into the Hidden Django Field
-        // PointField expects "POINT(longitude latitude)"
-        document.getElementById('id_location').value = "POINT(" + lng + " " + lat + ")";
+        if (marker) { marker.setLatLng(e.latlng); } 
+        else { marker = L.marker(e.latlng).addTo(map); }
+        
+        // Matches the ID Django gives to the hidden field
+        document.getElementById('id_location').value = "POINT(" + e.latlng.lng + " " + e.latlng.lat + ")";
     });
 </script>
+{% endblock %}

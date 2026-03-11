@@ -6,5 +6,13 @@ from . import views
 
 urlpatterns = [
     path('add/', views.add_equipment, name='add_equipment'),
-    # path('', views.map_view, name='map_view'), # We'll fill this in later
+
+    path('', views.home, name='home' ),
+
+    path('starter/', views.starter, name='starter'),
+
+    path('map/', views.map_view, name='map_view'),
+
+    path('toggle/<int:pk>/', views.toggle_status, name='toggle_status'),
+
 ]
