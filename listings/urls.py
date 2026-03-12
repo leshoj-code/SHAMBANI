@@ -15,4 +15,6 @@ urlpatterns = [
 
     path('toggle/<int:pk>/', views.toggle_status, name='toggle_status'),
 
+    path('pay/<int:pk>/', views.pay_for_machinery, name='pay_for_machinery'),
+
 ]

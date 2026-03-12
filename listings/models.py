@@ -23,4 +23,8 @@ class Equipment(models.Model):
     is_rented = models.BooleanField(default=False) 
     # Who is renting it?
     current_renter = models.CharField(max_length=100, blank=True, null=True)
+
+    owner_phone = models.CharField(max_length=15, default="254700000000")
+    lat = models.FloatField(null=True, blank=True)
+    lng = models.FloatField(null=True, blank=True)
     

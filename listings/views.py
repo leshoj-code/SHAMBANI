@@ -3,6 +3,8 @@ from django.contrib import messages
 from .forms import EquipmentForm
 import json
 from .models import Equipment
+from .mpesa import initiate_stk_push
+import time
 
 # Create your views here.
 
@@ -69,3 +71,33 @@ def toggle_status(request, pk):
         item.current_renter = "Neighboring Farm"
     item.save()
     return redirect('index')
+
+#Payment
+def pay_for_machinery(request, pk):
+    equipment = get_object_or_404(Equipment, pk=pk)
+    # Get phone number from a form or user profile
+    phone = "254712345678" # Start with 254
+    
+    response = initiate_stk_push(phone, equipment.price_per_hour)
+    
+    if response.get('ResponseCode') == '0':
+        messages.success(request, "M-Pesa Push sent! Please enter your PIN.")
+    else:
+        messages.error(request, "Failed to initiate M-Pesa payment.")
+        
+    return redirect('index')
+
+def pay_view(request, pk):
+    # 1. Trigger the real M-Pesa push
+    # initiate_stk_push(phone, amount) 
+    
+    # 2. Simulate the 'Waiting' and 'Success' UI
+    messages.info(request, "Waiting for M-Pesa PIN entry...")
+    
+    equipment = Equipment.objects.get(pk=pk)
+    equipment.is_rented = False # It's been returned and paid for
+    equipment.save()
+    
+    messages.success(request, f"Payment of KES {equipment.price_per_hour} received! Equipment is now available.")
+    return redirect('index')
+

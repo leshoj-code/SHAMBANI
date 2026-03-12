@@ -58,7 +58,39 @@
                     
                     <div class="d-flex justify-content-between align-items-center mt-auto">
                         <span class="text-success fw-bold">KES {{ unit.price_per_hour }}/hr</span>
-                        <a href="{% url 'toggle_status' unit.pk %}" class="btn btn-sm btn-outline-success rounded-pill px-3">Mark Returned</a>
+                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#payModal{{ unit.pk }}">
+                            Pay & Return
+                        </button>
+                    </div>
+
+                    <div class="modal fade" id="payModal{{ unit.pk }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content rounded-4 border-0 shadow">
+                                <div class="modal-header border-0 p-4 pb-0">
+                                    <h5 class="fw-bold">M-Pesa Checkout</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <form action="{% url 'pay_for_machinery' unit.pk %}" method="POST">
+                                    {% csrf_token %}
+                                    <div class="modal-body p-4">
+                                        <p class="text-muted small">The total amount of <strong>KES {{ unit.price_per_hour }}</strong> will be requested from your M-Pesa.</p>
+                                        <div class="mb-3">
+                                            <label class="form-label small fw-bold">Safaricom Phone Number</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light">+254</span>
+                                                <input type="number" name="phone" class="form-control" placeholder="712345678" required>
+                                            </div>
+                                            <div class="form-text text-success">Enter number starting with 7...</div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer border-0 p-4 pt-0">
+                                        <button type="submit" class="btn btn-success w-100 rounded-pill fw-bold py-2">
+                                            Send STK Push 📲
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

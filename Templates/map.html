@@ -22,17 +22,24 @@
     </div>
 </div>
 
+<button onclick="locateUser()" class="btn btn-primary rounded-pill mb-3 shadow-sm">
+    📍 Find My Current Location
+</button>
 <div id="map" style="height: 600px; min-height: 600px; width: 100%; border-radius: 20px; z-index: 1;" class="shadow-lg"></div>
 
 <script>
+    var map; // Global variable
+
     document.addEventListener("DOMContentLoaded", function() {
         if (typeof L !== 'undefined') {
-            var map = L.map('map').setView([-1.286389, 36.817223], 12);
+            // 1. Initialize Map
+            map = L.map('map').setView([-1.286389, 36.817223], 12);
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; OpenStreetMap contributors'
             }).addTo(map);
 
+            // 2. Load Data
             var allItems = {{ equipment_json|safe }};
             var markerLayer = L.layerGroup().addTo(map);
 
@@ -40,22 +47,54 @@
                 markerLayer.clearLayers();
                 data.forEach(function(item) {
                     var marker = L.marker([item.lat, item.lng]);
-                    marker.bindPopup("<b>" + item.name + "</b><br>KES " + item.price);
+                    marker.bindPopup(`
+                        <div style="text-align: center;">
+                            <h6 class="fw-bold">${item.name}</h6>
+                            <p class="text-success fw-bold">KES ${item.price}/hr</p>
+                            <a href="https://wa.me/${item.owner_phone}?text=Jambo! I am interested in renting the ${item.name}." 
+                            target="_blank" 
+                            class="btn btn-sm btn-outline-success rounded-pill">
+                            💬 WhatsApp Owner
+                            </a>
+                        </div>
+                    `);
+
                     marker.addTo(markerLayer);
                 });
+
+                if (data.length > 0) {
+                    var group = new L.featureGroup(markerLayer.getLayers());
+                    map.fitBounds(group.getBounds().pad(0.1));
+                }
             }
 
+            // 3. Initial Display
             displayMarkers(allItems);
 
-            if (data.length > 0) {
-            var group = new L.featureGroup(markerLayer.getLayers());
-            map.fitBounds(group.getBounds().pad(0.1)); 
-}
-            
+            // 4. Active Geolocation Listeners
+            map.on('locationfound', function(e) {
+                console.log("Location found!");
+                L.marker(e.latlng).addTo(map).bindPopup("You are here").openPopup();
+                L.circle(e.latlng, e.accuracy).addTo(map);
+            });
+
+            map.on('locationerror', function(e) {
+                alert("Location access denied: " + e.message);
+            });
+
+            // Fix for map rendering in Bootstrap cards
             setTimeout(function(){ map.invalidateSize()}, 500);
+
         } else {
-            console.error("Leaflet (L) failed to load. Check your internet connection or script tags.");
+            console.error("Leaflet (L) failed to load.");
         }
     });
+
+    function locateUser() {
+        if (map) {
+            console.log("Locate button clicked...");
+            map.locate({setView: true, maxZoom: 14});
+        }
+    }
 </script>
 {% endblock %}
