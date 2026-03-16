@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',  # For WebSocket support
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -38,8 +39,17 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.gis',  
-    'listings',            
+    'listings', 
+    'channels',           
 ]
+
+ASGI_APPLICATION = 'config.asgi.application' # For WebSocket support
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer", # For WebSocket support
+    },
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

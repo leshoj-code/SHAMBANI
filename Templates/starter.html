@@ -64,5 +64,85 @@
         {% block content %}
         {% endblock %}
     </div>
+
+    <div class="modal fade" id="orderRequestModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-body text-center p-5">
+                    <div class="mb-4">
+                        <span class="display-1">🚜</span>
+                    </div>
+                    <h3 class="fw-bold mb-2">New Order Request!</h3>
+                    <p class="text-muted mb-4">
+                        <span id="renterName" class="fw-bold text-primary"></span> wants to rent your 
+                        <span id="machineName" class="fw-bold text-dark"></span>.
+                    </p>
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-success btn-lg rounded-pill fw-bold" onclick="acceptOrder()">Accept Request</button>
+                        <button type="button" class="btn btn-light btn-sm rounded-pill text-muted" data-bs-dismiss="modal">Decline</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Initialize the Modal so JS can control it
+        const orderModalElement = document.getElementById('orderRequestModal');
+        const orderModal = new bootstrap.Modal(orderModalElement);
+
+        // Open the WebSocket connection
+        const socket = new WebSocket(
+            (window.location.protocol === 'https:' ? 'wss://' : 'ws://') + 
+            window.location.host + '/ws/notifications/'
+        );
+
+        socket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+
+            // Logic for new order requests
+            if (data.type === 'order_request') {
+                document.getElementById('renterName').innerText = data.renter_name;
+                document.getElementById('machineName').innerText = data.machine_name;
+                orderModal.show();
+            } 
+            // Logic for payment prompt (sent to the Renter)
+            else if (data.type === 'payment_prompt') {
+                alert("Owner accepted! Check your phone for the M-Pesa prompt.");
+            }
+        };
+
+        function acceptOrder() {
+            orderModal.hide();
+            alert("Order Accepted! Opening M-Pesa details...");
+        }
+
+        socket.onclose = function(e) {
+            console.error('WebSocket closed. Real-time requests won\'t work.');
+        };
+
+       async function acceptOrder() {
+            // 1. Get the equipment name from the modal
+            const machineName = document.getElementById('machineName').innerText;
+            
+            // 2. Tell the server to mark it as Active
+            const response = await fetch('/accept-order/', {
+                method: 'POST',
+                headers: { 
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 'machine_name': machineName })
+            });
+
+            if (response.ok) {
+                orderModal.hide();
+                alert("Order Accepted! Payment requested from renter.");
+                // Optional: Trigger M-Pesa STK Push here
+            }
+        } 
+    </script>
+
 </body>
 </html>

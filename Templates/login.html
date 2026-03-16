@@ -1,0 +1,36 @@
+{% extends 'starter.html' %}
+
+{% block content %}
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-lg rounded-4 p-4">
+            <div class="text-center mb-4">
+                <h2 class="fw-bold text-success">Welcome Back!</h2>
+                <p class="text-muted">Login to manage your equipment</p>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                
+                {% for field in form %}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">{{ field.label }}</label>
+                        <input type="{{ field.field.widget.input_type }}" 
+                               name="{{ field.name }}" 
+                               class="form-control rounded-pill" 
+                               placeholder="Enter {{ field.label }}">
+                    </div>
+                {% endfor %}
+
+                <div class="d-grid gap-2 mt-4">
+                    <button type="submit" class="btn btn-success btn-lg rounded-pill fw-bold">Login</button>
+                </div>
+            </form>
+
+            <div class="text-center mt-4">
+                <p class="small">Don't have an account? <a href="{% url 'signup' %}" class="text-success text-decoration-none fw-bold">Sign Up</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

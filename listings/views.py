@@ -1,26 +1,42 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth.decorators import login_required
 from .forms import EquipmentForm
 import json
 from .models import Equipment
 from .mpesa import initiate_stk_push
 import time
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
+
 
 # Create your views here.
 
+@login_required
 def add_equipment(request):
     if request.method == 'POST':
         form = EquipmentForm(request.POST)
         if form.is_valid():
-            form.save()
+            # 1. Create the object but don't save to DB yet
+            equipment = form.save(commit=False)
+            
+            # 2. Attach the currently logged-in user as the owner
+            equipment.user = request.user 
+            
+            # 3. Now save it for real
+            equipment.save()
+            
             messages.success(request, "Tractor listed successfully! Check the map.")
-            return redirect('map_view') # We will create this next
+            return redirect('map_view')
         else:
-            # This helps debug if the map click didn't send the right data
-            print(form.errors) 
+            print(form.errors)
     else:
         form = EquipmentForm()
-        
+    
     return render(request, 'add_listing.html', {'form': form})
 
 def home (request):
@@ -37,6 +53,7 @@ def map_view(request):
     locations = []
     for item in all_equipment:
         locations.append({
+            'id': item.id,
             'name': item.name,
             'type': item.get_type_display(),
             'price': str(item.price_per_hour),
@@ -101,3 +118,72 @@ def pay_view(request, pk):
     messages.success(request, f"Payment of KES {equipment.price_per_hour} received! Equipment is now available.")
     return redirect('index')
 
+
+def request_order(request, equipment_id):
+    if request.method == "POST":
+        equipment = get_object_or_404(Equipment, id=equipment_id)
+        owner = equipment.user 
+        
+        channel_layer = get_channel_layer()
+        
+        # Send message to the owner's specific group
+        async_to_sync(channel_layer.group_send)(
+            f"user_{owner.id}", # This matches the group name in consumers.py
+            {
+                "type": "order_notification",
+                "machine_name": equipment.name,
+                "renter_name": request.user.username,
+            }
+        )
+        
+        return JsonResponse({"status": "success"})
+    
+
+    #Login and Registration Views
+def signup_view(request):
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect('index') # Redirect to your home page
+    else:
+        form = UserCreationForm()
+    return render(request, 'signup.html', {'form': form})
+
+def login_view(request):
+    if request.method == 'POST':
+        form = AuthenticationForm(data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            login(request, user)
+            return redirect('index')
+    else:
+        form = AuthenticationForm()
+    return render(request, 'login.html', {'form': form})
+
+def logout_view(request):
+    logout(request)
+    return redirect('login')
+
+@csrf_exempt
+def accept_order(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        machine_name = data.get('machine_name')
+        
+        equipment = Equipment.objects.get(name=machine_name)
+        equipment.status = 'Active'
+        equipment.save()
+        
+        # Notify the OWNER (the person currently logged in) to update the UI
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f"user_{request.user.id}", # Owner's group
+            {
+                "type": "update_status", 
+                "machine_name": machine_name,
+                "new_status": "Active"
+            }
+        )
+        return JsonResponse({'status': 'success'})

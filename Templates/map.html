@@ -51,9 +51,11 @@
                         <div style="text-align: center;">
                             <h6 class="fw-bold">${item.name}</h6>
                             <p class="text-success fw-bold">KES ${item.price}/hr</p>
-                            <a href="https://wa.me/${item.owner_phone}?text=Jambo! I am interested in renting the ${item.name}." 
-                            target="_blank" 
-                            class="btn btn-sm btn-outline-success rounded-pill">
+                            <button onclick="sendOrderRequest(${item.id}, '${item.name}')" 
+                                    class="btn btn-sm btn-primary rounded-pill w-100 mb-2">
+                            🚜 Order Now
+                            </button>
+                            <a href="https://wa.me/${item.owner_phone}" target="_blank" class="btn btn-sm btn-outline-success rounded-pill w-100">
                             💬 WhatsApp Owner
                             </a>
                         </div>
@@ -95,6 +97,24 @@
             console.log("Locate button clicked...");
             map.locate({setView: true, maxZoom: 14});
         }
+    }
+
+    function sendOrderRequest(equipmentId, machineName) {
+        console.log("Debug: equipmentId is", equipmentId);
+
+        fetch(`/request-order/${equipmentId}/`, {
+            method: 'POST',
+            headers: { 
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        }).then(response => {
+            if (response.ok) {
+                alert("Request sent to " + machineName + " owner! Please wait for them to accept.");
+            } else {
+                alert("Error sending request. Are you logged in?");
+            }
+        });
     }
 </script>
 {% endblock %}
