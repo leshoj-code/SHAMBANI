@@ -68,15 +68,18 @@ def map_view(request):
     return render(request, 'map.html', context)
 
 def index(request):
-    all_units = Equipment.objects.all()
-    active_units = all_units.filter(is_rented=True)
-    idle_units = all_units.filter(is_rented=False)
+    # Fetch units belonging to the logged-in owner
+    all_units = Equipment.objects.filter(user=request.user)
+    
+    # Split them by status
+    active_units = all_units.filter(status='Active')
+    idle_units = all_units.filter(status='Idle')
     
     context = {
         'active_units': active_units,
-        'idle_count': idle_units.count(),
+        'idle_units': idle_units,
         'active_count': active_units.count(),
-        'total_count': all_units.count(),
+        'idle_count': idle_units.count(),
     }
     return render(request, 'index.html', context)
 
@@ -172,18 +175,25 @@ def accept_order(request):
         data = json.loads(request.body)
         machine_name = data.get('machine_name')
         
+        # 1. Update the Database
         equipment = Equipment.objects.get(name=machine_name)
         equipment.status = 'Active'
         equipment.save()
         
-        # Notify the OWNER (the person currently logged in) to update the UI
+        # 2. Prepare the notification
         channel_layer = get_channel_layer()
+        
+        # Notify the OWNER (to update their dashboard status live)
         async_to_sync(channel_layer.group_send)(
-            f"user_{request.user.id}", # Owner's group
+            f"user_{request.user.id}", 
             {
-                "type": "update_status", 
+                "type": "status_update_message", # This MUST match the method name in consumers.py
                 "machine_name": machine_name,
                 "new_status": "Active"
             }
         )
+        
+        # TODO: Notify the RENTER 
+        # (This requires passing the renter_id from the map to the modal to the view)
+        
         return JsonResponse({'status': 'success'})

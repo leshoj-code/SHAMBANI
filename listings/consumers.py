@@ -18,3 +18,11 @@ class OrderConsumer(AsyncWebsocketConsumer):
             'machine_name': event['machine_name'],
             'renter_name': event['renter_name']
         }))
+
+    async def status_update_message(self, event):
+        # This sends the data to the JavaScript socket.onmessage
+        await self.send(text_data=json.dumps({
+            'type': 'status_update',
+            'machine_name': event['machine_name'],
+            'new_status': event['new_status']
+        }))

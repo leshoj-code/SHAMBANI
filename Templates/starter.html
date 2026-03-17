@@ -101,22 +101,22 @@
         socket.onmessage = function(e) {
             const data = JSON.parse(e.data);
 
-            // Logic for new order requests
             if (data.type === 'order_request') {
-                document.getElementById('renterName').innerText = data.renter_name;
-                document.getElementById('machineName').innerText = data.machine_name;
-                orderModal.show();
+                // ... show your modal ...
             } 
-            // Logic for payment prompt (sent to the Renter)
-            else if (data.type === 'payment_prompt') {
-                alert("Owner accepted! Check your phone for the M-Pesa prompt.");
+            else if (data.type === 'status_update') {
+                console.log("Status update received for:", data.machine_name);
+                
+                // Find the badge by the ID we added to index.html
+                const statusBadge = document.getElementById(`status-${data.machine_name}`);
+                
+                if (statusBadge) {
+                    statusBadge.innerText = data.new_status;
+                    statusBadge.className = "badge rounded-pill bg-success px-3"; // Turn it green!
+                    alert(`Machine ${data.machine_name} is now ACTIVE!`);
+                }
             }
         };
-
-        function acceptOrder() {
-            orderModal.hide();
-            alert("Order Accepted! Opening M-Pesa details...");
-        }
 
         socket.onclose = function(e) {
             console.error('WebSocket closed. Real-time requests won\'t work.');

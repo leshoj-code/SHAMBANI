@@ -51,7 +51,9 @@
                         <div class="bg-success bg-opacity-10 p-2 rounded-3">
                             🚜
                         </div>
-                        <span class="badge rounded-pill bg-warning text-dark px-3">In Use</span>
+                        <span id="status-{{ unit.name }}" class="badge rounded-pill bg-warning text-dark px-3">
+                            {{ unit.status|default:"In Use" }}
+                        </span>
                     </div>
                     <h5 class="card-title fw-bold mb-1">{{ unit.name }}</h5>
                     <p class="text-muted small mb-3">Renter: <span class="text-dark fw-semibold">{{ unit.current_renter }}</span></p>
@@ -102,6 +104,32 @@
             </div>
         </div>
         {% endfor %}
+
+    <h2 class="fw-bold mt-5 text-dark">Idle Fleet</h2>
+        <p class="text-muted">Equipment waiting for work.</p>
+
+        <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
+            {% for unit in idle_units %}
+            <div class="col">
+                <div class="card h-100 border-0 shadow-sm rounded-4">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div class="bg-secondary bg-opacity-10 p-2 rounded-3">🚜</div>
+                            <span id="status-{{ unit.name }}" class="badge rounded-pill bg-secondary px-3">
+                                {{ unit.status }}
+                            </span>
+                        </div>
+                        <h5 class="card-title fw-bold mb-1">{{ unit.name }}</h5>
+                        <p class="text-success fw-bold">KES {{ unit.price_per_hour }}/hr</p>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <p class="text-center py-4 bg-light rounded-4">All your equipment is currently working! 🎉</p>
+            </div>
+            {% endfor %}
+        </div>
     </div>
 </div>
 
