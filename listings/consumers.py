@@ -32,6 +32,7 @@ class OrderConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps({
             "type":         "status_update",
             "machine_name": event["machine_name"],
+            "equipment_id": event["equipment_id"],
             "new_status":   event["new_status"],
         }))
 
