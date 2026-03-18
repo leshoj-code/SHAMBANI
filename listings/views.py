@@ -67,6 +67,7 @@ def map_view(request):
     }
     return render(request, 'map.html', context)
 
+@login_required
 def index(request):
     # Fetch units belonging to the logged-in owner
     all_units = Equipment.objects.filter(user=request.user)
@@ -122,24 +123,27 @@ def pay_view(request, pk):
     return redirect('index')
 
 
+@login_required
 def request_order(request, equipment_id):
-    if request.method == "POST":
-        equipment = get_object_or_404(Equipment, id=equipment_id)
-        owner = equipment.user 
-        
-        channel_layer = get_channel_layer()
-        
-        # Send message to the owner's specific group
-        async_to_sync(channel_layer.group_send)(
-            f"user_{owner.id}", # This matches the group name in consumers.py
-            {
-                "type": "order_notification",
-                "machine_name": equipment.name,
-                "renter_name": request.user.username,
-            }
-        )
-        
-        return JsonResponse({"status": "success"})
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+    
+    equipment = get_object_or_404(Equipment, id=equipment_id)
+    # Save the renter to the equipment so the owner knows who to reply to
+    equipment.current_renter = request.user
+    equipment.save()
+
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        f"user_{equipment.user.id}", # Send to Owner
+        {
+            "type": "order_notification",
+            "machine_name": equipment.name,
+            "renter_name": request.user.username,
+            "renter_id": request.user.id # Send ID to the modal
+        }
+    )
+    return JsonResponse({'status': 'sent'})
     
 
     #Login and Registration Views
@@ -169,31 +173,39 @@ def logout_view(request):
     logout(request)
     return redirect('login')
 
-@csrf_exempt
+@login_required
 def accept_order(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        machine_name = data.get('machine_name')
-        
-        # 1. Update the Database
-        equipment = Equipment.objects.get(name=machine_name)
-        equipment.status = 'Active'
-        equipment.save()
-        
-        # 2. Prepare the notification
-        channel_layer = get_channel_layer()
-        
-        # Notify the OWNER (to update their dashboard status live)
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+    data         = json.loads(request.body)
+    equipment_id = data.get('order_id')           # matches what JS now sends
+    equipment    = get_object_or_404(Equipment, id=equipment_id, user=request.user)  # owner-check built in
+
+    equipment.status = 'Active'
+    equipment.save()
+
+    channel_layer = get_channel_layer()
+
+    # 1. Update Owner's badge (use equipment.id not name)
+    async_to_sync(channel_layer.group_send)(
+        f"user_{request.user.id}",
+        {
+            "type":         "status_update_message",
+            "equipment_id": equipment.id,          # JS uses this to find the badge
+            "machine_name": equipment.name,
+            "new_status":   "Active",
+        }
+    )
+
+    # 2. Notify the Renter
+    if equipment.current_renter:
         async_to_sync(channel_layer.group_send)(
-            f"user_{request.user.id}", 
+            f"user_{equipment.current_renter.id}",
             {
-                "type": "status_update_message", # This MUST match the method name in consumers.py
-                "machine_name": machine_name,
-                "new_status": "Active"
+                "type":    "renter_message",
+                "message": f"Great news! Your request for {equipment.name} was accepted.",
             }
         )
-        
-        # TODO: Notify the RENTER 
-        # (This requires passing the renter_id from the map to the modal to the view)
-        
-        return JsonResponse({'status': 'success'})
+
+    return JsonResponse({'status': 'success'})

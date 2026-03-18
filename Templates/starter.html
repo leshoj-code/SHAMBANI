@@ -3,9 +3,7 @@
 <head>
     <title>ShambaShare</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
@@ -16,70 +14,56 @@
     </nav>
 
     <style>
-    body {
-        /* Replace with your image path or a high-res Unsplash URL */
-        background-image: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)), 
-                          url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80');
-        background-size: cover;
-        background-position: center;
-        background-attachment: fixed;
-        min-height: 100vh;
-    }
-
-    .card {
-        backdrop-filter: blur(5px);
-        background-color: rgba(255, 255, 255, 0.9) !important;
-         }
+        body {
+            background-image: linear-gradient(rgba(255,255,255,0.8), rgba(255,255,255,0.8)),
+                              url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 100vh;
+        }
+        .card {
+            backdrop-filter: blur(5px);
+            background-color: rgba(255,255,255,0.9) !important;
+        }
     </style>
+
     <div class="container mt-4">
-
-      <div class="toast-container position-fixed bottom-0 end-0 p-3">
-        {% if messages %}
-        {% for message in messages %}
-        <div id="liveToast" class="toast show align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
-            <div class="d-flex">
-                <div class="toast-body">
-                    ✅ {{ message }}
+        <!-- Toast (once, not twice) -->
+        <div class="toast-container position-fixed bottom-0 end-0 p-3">
+            {% if messages %}
+                {% for message in messages %}
+                <div class="toast show align-items-center text-white bg-success border-0" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">✅ {{ message }}</div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
                 </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
+                {% endfor %}
+            {% endif %}
         </div>
-        {% endfor %}
-        {% endif %}
+
+        {% block content %}{% endblock %}
     </div>
 
-    <div class="toast-container position-fixed bottom-0 end-0 p-3">
-        {% if messages %}
-        {% for message in messages %}
-        <div class="toast show align-items-center text-white bg-success border-0" role="alert">
-            <div class="d-flex">
-                <div class="toast-body">✅ {{ message }}</div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-            </div>
-        </div>
-        {% endfor %}
-        {% endif %}
-    </div>
-    
-        {% block content %}
-        {% endblock %}
-    </div>
-
+    <!-- Modal stays here so it's available to the Owner dashboard -->
     <div class="modal fade" id="orderRequestModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg rounded-4">
                 <div class="modal-body text-center p-5">
-                    <div class="mb-4">
-                        <span class="display-1">🚜</span>
-                    </div>
+                    <div class="mb-4"><span class="display-1">🚜</span></div>
                     <h3 class="fw-bold mb-2">New Order Request!</h3>
                     <p class="text-muted mb-4">
-                        <span id="renterName" class="fw-bold text-primary"></span> wants to rent your 
+                        <span id="renterName" class="fw-bold text-primary"></span> wants to rent your
                         <span id="machineName" class="fw-bold text-dark"></span>.
                     </p>
                     <div class="d-grid gap-2">
-                        <button type="button" class="btn btn-success btn-lg rounded-pill fw-bold" onclick="acceptOrder()">Accept Request</button>
-                        <button type="button" class="btn btn-light btn-sm rounded-pill text-muted" data-bs-dismiss="modal">Decline</button>
+                        <button type="button" class="btn btn-success btn-lg rounded-pill fw-bold" onclick="acceptOrder()">
+                            Accept Request
+                        </button>
+                        <button type="button" class="btn btn-light btn-sm rounded-pill text-muted" data-bs-dismiss="modal">
+                            Decline
+                        </button>
                     </div>
                 </div>
             </div>
@@ -87,62 +71,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Initialize the Modal so JS can control it
-        const orderModalElement = document.getElementById('orderRequestModal');
-        const orderModal = new bootstrap.Modal(orderModalElement);
 
-        // Open the WebSocket connection
-        const socket = new WebSocket(
-            (window.location.protocol === 'https:' ? 'wss://' : 'ws://') + 
-            window.location.host + '/ws/notifications/'
-        );
-
-        socket.onmessage = function(e) {
-            const data = JSON.parse(e.data);
-
-            if (data.type === 'order_request') {
-                // ... show your modal ...
-            } 
-            else if (data.type === 'status_update') {
-                console.log("Status update received for:", data.machine_name);
-                
-                // Find the badge by the ID we added to index.html
-                const statusBadge = document.getElementById(`status-${data.machine_name}`);
-                
-                if (statusBadge) {
-                    statusBadge.innerText = data.new_status;
-                    statusBadge.className = "badge rounded-pill bg-success px-3"; // Turn it green!
-                    alert(`Machine ${data.machine_name} is now ACTIVE!`);
-                }
-            }
-        };
-
-        socket.onclose = function(e) {
-            console.error('WebSocket closed. Real-time requests won\'t work.');
-        };
-
-       async function acceptOrder() {
-            // 1. Get the equipment name from the modal
-            const machineName = document.getElementById('machineName').innerText;
-            
-            // 2. Tell the server to mark it as Active
-            const response = await fetch('/accept-order/', {
-                method: 'POST',
-                headers: { 
-                    'X-CSRFToken': '{{ csrf_token }}',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ 'machine_name': machineName })
-            });
-
-            if (response.ok) {
-                orderModal.hide();
-                alert("Order Accepted! Payment requested from renter.");
-                // Optional: Trigger M-Pesa STK Push here
-            }
-        } 
-    </script>
-
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

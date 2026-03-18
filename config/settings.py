@@ -47,8 +47,9 @@ ASGI_APPLICATION = 'config.asgi.application' # For WebSocket support
 
 CHANNEL_LAYERS = {
     "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer", # For WebSocket support
-    },
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {"hosts": [("127.0.0.1", 6379)]},
+    }
 }
 
 MIDDLEWARE = [

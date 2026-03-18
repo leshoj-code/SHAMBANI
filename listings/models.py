@@ -4,6 +4,7 @@ from django.db import models
 
 from django.contrib.gis.db import models
 from django.contrib.auth.models import User
+from django.conf import settings
 
 class Equipment(models.Model):
 
@@ -33,4 +34,11 @@ class Equipment(models.Model):
     lng = models.FloatField(null=True, blank=True)
 
     status = models.CharField(max_length=20, default='Idle')
+    current_renter = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        null=True, 
+        blank=True, 
+        on_delete=models.SET_NULL,
+        related_name='renting_equipment'
+    )
     

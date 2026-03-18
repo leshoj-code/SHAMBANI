@@ -99,18 +99,21 @@
         }
     }
 
-    function sendOrderRequest(equipmentId, machineName) {
-        console.log("Debug: equipmentId is", equipmentId);
+    function sendOrderRequest(equipmentId, machineName) {  
+        if (!equipmentId) {
+            console.error("Error: Equipment ID is missing!");
+            return;
+        }
 
         fetch(`/request-order/${equipmentId}/`, {
             method: 'POST',
-            headers: { 
+            headers: {
                 'X-CSRFToken': '{{ csrf_token }}',
                 'Content-Type': 'application/json'
             }
         }).then(response => {
             if (response.ok) {
-                alert("Request sent to " + machineName + " owner! Please wait for them to accept.");
+                alert(`Request sent to ${machineName} owner! Please wait for them to accept.`);
             } else {
                 alert("Error sending request. Are you logged in?");
             }
