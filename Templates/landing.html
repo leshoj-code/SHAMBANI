@@ -1,0 +1,288 @@
+{% extends 'starter.html' %}
+{% block content %}
+
+<style>
+    .hero-section {
+        min-height: 85vh;
+        display: flex;
+        align-items: center;
+        padding: 4rem 0;
+    }
+    .hero-badge {
+        display: inline-block;
+        background: #e8f5ee;
+        color: #1a6b3c;
+        border: 1px solid #a8e6c0;
+        border-radius: 50px;
+        padding: 0.35rem 1rem;
+        font-size: 0.8rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        margin-bottom: 1.5rem;
+    }
+    .hero-title {
+        font-size: clamp(2.5rem, 6vw, 4.5rem);
+        font-weight: 700;
+        line-height: 1.1;
+        letter-spacing: -2px;
+        color: #0f2d1c;
+    }
+    .hero-title .accent {
+        color: #2d9e5f;
+    }
+    .hero-subtitle {
+        font-size: 1.15rem;
+        color: #4a6b58;
+        line-height: 1.7;
+        max-width: 480px;
+    }
+    .stat-card {
+        background: rgba(255,255,255,0.9);
+        border: 1px solid rgba(45,158,95,0.15);
+        border-radius: 16px;
+        padding: 1.5rem;
+        text-align: center;
+        backdrop-filter: blur(10px);
+        transition: transform 0.2s;
+    }
+    .stat-card:hover { transform: translateY(-4px); }
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1a6b3c;
+        line-height: 1;
+    }
+    .stat-label {
+        font-size: 0.8rem;
+        color: #6b8c7a;
+        font-weight: 600;
+        margin-top: 0.25rem;
+    }
+    .feature-card {
+        background: rgba(255,255,255,0.85);
+        border: 1px solid rgba(0,0,0,0.06);
+        border-radius: 20px;
+        padding: 2rem;
+        height: 100%;
+        transition: all 0.3s;
+        backdrop-filter: blur(8px);
+    }
+    .feature-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 20px 40px rgba(26,107,60,0.12);
+        border-color: rgba(45,158,95,0.2);
+    }
+    .feature-icon {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        display: block;
+    }
+    .how-step {
+        display: flex;
+        gap: 1.25rem;
+        align-items: flex-start;
+        margin-bottom: 2rem;
+    }
+    .step-number {
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+        background: linear-gradient(135deg, #1a6b3c, #2d9e5f);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.9rem;
+    }
+    .cta-section {
+        background: linear-gradient(135deg, #1a6b3c 0%, #2d9e5f 100%);
+        border-radius: 28px;
+        padding: 4rem 3rem;
+        text-align: center;
+        margin: 4rem 0;
+        position: relative;
+        overflow: hidden;
+    }
+    .cta-section::before {
+        content: '🌾';
+        position: absolute;
+        font-size: 8rem;
+        opacity: 0.08;
+        top: -1rem;
+        right: 2rem;
+    }
+    .cta-section::after {
+        content: '🚜';
+        position: absolute;
+        font-size: 6rem;
+        opacity: 0.08;
+        bottom: -1rem;
+        left: 2rem;
+    }
+</style>
+
+<!-- Hero -->
+<div class="hero-section">
+    <div class="row align-items-center g-5 w-100">
+        <div class="col-lg-6">
+            <div class="hero-badge">🇰🇪 Built for Kenyan Farmers</div>
+            <h1 class="hero-title">
+                Rent farm equipment,<br>
+                <span class="accent">grow together.</span>
+            </h1>
+            <p class="hero-subtitle mt-3 mb-4">
+                ShambaShare connects farmers who need tractors, pumps, and harvesters 
+                with owners who have them — in real time, across Kenya.
+            </p>
+            <div class="d-flex gap-3 flex-wrap">
+                <a href="{% url 'signup' %}" class="btn btn-success btn-lg rounded-pill px-4 fw-bold shadow-sm">
+                    Get Started Free →
+                </a>
+                <a href="{% url 'map_view' %}" class="btn btn-outline-success btn-lg rounded-pill px-4 fw-bold">
+                    🗺️ Browse Equipment
+                </a>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="row g-3">
+                <div class="col-6">
+                    <div class="stat-card">
+                        <div class="stat-number">500+</div>
+                        <div class="stat-label">Active Farmers</div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="stat-card">
+                        <div class="stat-number">120+</div>
+                        <div class="stat-label">Equipment Listed</div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="stat-card">
+                        <div class="stat-number">47</div>
+                        <div class="stat-label">Counties Covered</div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="stat-card">
+                        <div class="stat-number">M-Pesa</div>
+                        <div class="stat-label">Secure Payments</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features -->
+<div class="mb-5">
+    <h2 class="fw-bold text-center mb-2" style="letter-spacing:-1px;">Everything you need</h2>
+    <p class="text-center text-muted mb-5">From finding equipment to paying — all in one place.</p>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="feature-card">
+                <span class="feature-icon">🗺️</span>
+                <h5 class="fw-bold">Live Equipment Map</h5>
+                <p class="text-muted small">Find tractors, pumps and harvesters near you on an interactive map. Filter by type, price, and availability.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card">
+                <span class="feature-icon">⚡</span>
+                <h5 class="fw-bold">Real-Time Requests</h5>
+                <p class="text-muted small">Send a rental request and the owner is notified instantly. No waiting, no phone calls — accept in seconds.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card">
+                <span class="feature-icon">📲</span>
+                <h5 class="fw-bold">M-Pesa Payments</h5>
+                <p class="text-muted small">Pay directly from your phone via M-Pesa STK Push. Secure, instant, and familiar to every Kenyan farmer.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- How it works -->
+<div class="row g-5 mb-5 align-items-center">
+    <div class="col-lg-5">
+        <h2 class="fw-bold mb-4" style="letter-spacing:-1px;">How it works</h2>
+        <div class="how-step">
+            <div class="step-number">1</div>
+            <div>
+                <h6 class="fw-bold mb-1">Create your account</h6>
+                <p class="text-muted small mb-0">Sign up as an Equipment Owner or a Farmer looking to rent.</p>
+            </div>
+        </div>
+        <div class="how-step">
+            <div class="step-number">2</div>
+            <div>
+                <h6 class="fw-bold mb-1">Find or list equipment</h6>
+                <p class="text-muted small mb-0">Owners pin their equipment on the map. Renters browse and request.</p>
+            </div>
+        </div>
+        <div class="how-step">
+            <div class="step-number">3</div>
+            <div>
+                <h6 class="fw-bold mb-1">Accept & pay via M-Pesa</h6>
+                <p class="text-muted small mb-0">Owner accepts in real time. Renter pays instantly from their phone.</p>
+            </div>
+        </div>
+        <div class="how-step">
+            <div class="step-number">4</div>
+            <div>
+                <h6 class="fw-bold mb-1">Get to work</h6>
+                <p class="text-muted small mb-0">Equipment is confirmed and on its way. Your shamba won't wait.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="feature-card p-4">
+            <div class="d-flex align-items-center gap-3 mb-4 p-3 bg-success bg-opacity-10 rounded-3">
+                <span style="font-size:2rem">🚜</span>
+                <div>
+                    <div class="fw-bold">Massey Ferguson 385</div>
+                    <div class="text-success fw-bold small">KES 3,500 / hr</div>
+                </div>
+                <span class="badge bg-success ms-auto rounded-pill">Available</span>
+            </div>
+            <div class="d-flex align-items-center gap-3 p-3 bg-warning bg-opacity-10 rounded-3 mb-4">
+                <span style="font-size:2rem">💧</span>
+                <div>
+                    <div class="fw-bold">Water Pump 3inch</div>
+                    <div class="text-success fw-bold small">KES 800 / hr</div>
+                </div>
+                <span class="badge bg-warning text-dark ms-auto rounded-pill">In Use</span>
+            </div>
+            <div class="d-flex align-items-center gap-3 p-3 bg-success bg-opacity-10 rounded-3">
+                <span style="font-size:2rem">🌾</span>
+                <div>
+                    <div class="fw-bold">Combine Harvester</div>
+                    <div class="text-success fw-bold small">KES 8,000 / hr</div>
+                </div>
+                <span class="badge bg-success ms-auto rounded-pill">Available</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CTA -->
+<div class="cta-section">
+    <h2 class="fw-bold text-white mb-3" style="font-size:2.2rem; letter-spacing:-1px;">
+        Ready to grow your farm?
+    </h2>
+    <p class="text-white opacity-75 mb-4">Join hundreds of farmers already using ShambaShare across Kenya.</p>
+    <div class="d-flex gap-3 justify-content-center flex-wrap">
+        <a href="{% url 'signup' %}" class="btn btn-light btn-lg rounded-pill px-5 fw-bold text-success">
+            Sign Up Free
+        </a>
+        <a href="{% url 'login' %}" class="btn btn-outline-light btn-lg rounded-pill px-5 fw-bold">
+            Login
+        </a>
+    </div>
+</div>
+
+{% endblock %}

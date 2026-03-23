@@ -13,12 +13,11 @@ from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.auth import AuthMiddlewareStack
 from django.urls import path
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'shambashare.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 
-# Django must be set up before importing consumers
 django_asgi_app = get_asgi_application()
 
-from listings.consumers import OrderConsumer  # import AFTER env is set
+from listings.consumers import OrderConsumer
 
 application = ProtocolTypeRouter({
     "http": django_asgi_app,

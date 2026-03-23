@@ -133,16 +133,74 @@
     </div>
 </div>
 
-<div class="bg-light p-4 rounded-4 mb-5 d-flex align-items-center justify-content-between border border-secondary border-opacity-10">
-    <div class="d-flex align-items-center">
-        <div class="display-6 me-3">🌦️</div>
-        <div>
-            <h5 class="fw-bold m-0 text-dark">Nairobi Weather Update</h5>
-            <p class="text-muted m-0 small">Scattered showers. Ideal for planting, but check tractor traction.</p>
+    <div class="bg-light p-4 rounded-4 mb-5 d-flex align-items-center justify-content-between border border-secondary border-opacity-10">
+        <div class="d-flex align-items-center">
+            <div class="display-6 me-3">🌦️</div>
+            <div>
+                <h5 class="fw-bold m-0 text-dark">Nairobi Weather Update</h5>
+                <p class="text-muted m-0 small">Scattered showers. Ideal for planting, but check tractor traction.</p>
+            </div>
+        </div>
+        <div class="text-end">
+            <span class="badge bg-dark rounded-pill px-3">Smart Advice</span>
         </div>
     </div>
-    <div class="text-end">
-        <span class="badge bg-dark rounded-pill px-3">Smart Advice</span>
-    </div>
-</div>
+
+{% endblock %} 
+
+{% block extra_js %}
+<script>
+    const orderModalElement = document.getElementById('orderRequestModal');
+    const orderModal        = new bootstrap.Modal(orderModalElement);
+    let currentOrderId      = null;
+
+    const socket = new WebSocket(
+        (window.location.protocol === 'https:' ? 'wss://' : 'ws://') +
+        window.location.host + '/ws/notifications/'
+    );
+
+    socket.onopen = function() {
+        console.log('WebSocket connected ✓');
+    };
+
+    socket.onclose = function() {
+        console.error('WebSocket closed — real-time updates paused.');
+    };
+
+    socket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        if (data.type === 'order_request') {
+            document.getElementById('renterName').innerText  = data.renter_name;
+            document.getElementById('machineName').innerText = data.machine_name;
+            currentOrderId = data.order_id;
+            orderModal.show();
+        }
+        else if (data.type === 'status_update') {
+            const badge = document.getElementById(`status-${data.machine_name}`);
+            if (badge) {
+                badge.innerText = data.new_status;
+                badge.className = 'badge rounded-pill px-3 ' +
+                    (data.new_status === 'Active' ? 'bg-warning text-dark' : 'bg-secondary');
+            }
+        }
+    };
+
+    async function acceptOrder() {
+        if (!currentOrderId) return;
+        const response = await fetch('/accept-order/', {
+            method:  'POST',
+            headers: {
+                'X-CSRFToken':  '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ order_id: currentOrderId })
+        });
+        if (response.ok) {
+            orderModal.hide();
+            currentOrderId = null;
+        } else {
+            alert('Something went wrong accepting the order.');
+        }
+    }
+</script>
 {% endblock %}

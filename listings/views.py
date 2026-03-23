@@ -3,8 +3,8 @@ from django.contrib import messages
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
-from .forms import EquipmentForm
-from .models import Equipment
+from .forms import *
+from .models import *
 from .mpesa import initiate_stk_push, format_phone
 import json
 from django.http import JsonResponse
@@ -13,7 +13,10 @@ from channels.layers import get_channel_layer
 
 
 def home(request):
-    return render(request, 'index.html')
+    if request.user.is_authenticated:
+        return redirect('index')   
+    return render(request, 'landing.html')
+
 
 def starter(request):
     return render(request, 'starter.html')
@@ -51,17 +54,19 @@ def add_equipment(request):
     return render(request, 'add_listing.html', {'form': form})
 
 
+@login_required
 def map_view(request):
-    all_equipment = Equipment.objects.all()
+    all_equipment = Equipment.objects.select_related('user__profile').all()
     locations = []
     for item in all_equipment:
         locations.append({
-            'id':    item.id,
-            'name':  item.name,
-            'type':  item.get_type_display(),
-            'price': str(item.price_per_hour),
-            'lat':   item.location.y,
-            'lng':   item.location.x,
+            'id':          item.id,
+            'name':        item.name,
+            'type':        item.get_type_display(),
+            'price':       str(item.price_per_hour),
+            'lat':         item.location.y,
+            'lng':         item.location.x,
+            'owner_phone': item.user.profile.phone if hasattr(item.user, 'profile') else '',
         })
     return render(request, 'map.html', {'equipment_json': json.dumps(locations)})
 
@@ -132,10 +137,12 @@ def pay_for_machinery(request, pk):
         return redirect('index')
 
     equipment = get_object_or_404(Equipment, pk=pk)
-    raw_phone = request.POST.get('phone', '').strip()
 
-    if not raw_phone:
-        messages.error(request, "Please enter a phone number.")
+    # Read phone from the renter's profile instead of hardcoded number
+    try:
+        raw_phone = equipment.current_renter.profile.phone
+    except AttributeError:
+        messages.error(request, "Renter phone number not found.")
         return redirect('index')
 
     phone    = format_phone(raw_phone)
@@ -168,15 +175,32 @@ def toggle_status(request, pk):
 
 def signup_view(request):
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = SignupForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            login(request, user)
-            return redirect('index')
-    else:
-        form = UserCreationForm()
-    return render(request, 'signup.html', {'form': form})
+            user            = form.save(commit=False)
+            user.email      = form.cleaned_data['email']
+            user.first_name = form.cleaned_data['full_name'].split()[0]
+            user.last_name  = ' '.join(form.cleaned_data['full_name'].split()[1:])
+            user.save()
 
+            # Save extra fields to profile
+            UserProfile.objects.create(
+                user      = user,
+                phone     = form.cleaned_data['phone'],
+                role      = form.cleaned_data['role'],
+                full_name = form.cleaned_data['full_name'],
+            )
+
+            login(request, user)
+
+            # Route based on role
+            if form.cleaned_data['role'] == 'owner':
+                return redirect('index')
+            else:
+                return redirect('map_view')
+    else:
+        form = SignupForm()
+    return render(request, 'signup.html', {'form': form})
 
 def login_view(request):
     if request.method == 'POST':

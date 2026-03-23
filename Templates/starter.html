@@ -4,18 +4,12 @@
     <title>ShambaShare</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-</head>
-<body>
-    <nav class="navbar navbar-dark bg-success">
-        <div class="container">
-            <a class="navbar-brand" href="/">ShambaShare</a>
-        </div>
-    </nav>
-
     <style>
         body {
-            background-image: linear-gradient(rgba(255,255,255,0.8), rgba(255,255,255,0.8)),
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-image: linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)),
                               url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80');
             background-size: cover;
             background-position: center;
@@ -26,52 +20,149 @@
             backdrop-filter: blur(5px);
             background-color: rgba(255,255,255,0.9) !important;
         }
+        .navbar-shamba {
+            background: linear-gradient(135deg, #1a6b3c 0%, #2d9e5f 100%);
+            box-shadow: 0 2px 20px rgba(26,107,60,0.3);
+            padding: 0.75rem 0;
+        }
+        .navbar-brand-text {
+            font-weight: 700;
+            font-size: 1.4rem;
+            letter-spacing: -0.5px;
+            color: white !important;
+        }
+        .navbar-brand-text span {
+            color: #a8f0c6;
+        }
+        .nav-pill {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.25);
+            color: white !important;
+            border-radius: 50px;
+            padding: 0.4rem 1rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+        .nav-pill:hover {
+            background: rgba(255,255,255,0.28);
+            color: white !important;
+        }
+        .nav-pill-solid {
+            background: white;
+            color: #1a6b3c !important;
+            border: 1px solid white;
+            border-radius: 50px;
+            padding: 0.4rem 1rem;
+            font-size: 0.85rem;
+            font-weight: 700;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+        .nav-pill-solid:hover {
+            background: #f0fff6;
+            color: #1a6b3c !important;
+        }
+        .nav-username {
+            color: rgba(255,255,255,0.85);
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .nav-divider {
+            width: 1px;
+            height: 20px;
+            background: rgba(255,255,255,0.25);
+            margin: 0 0.5rem;
+        }
     </style>
+</head>
+<body>
 
-    <div class="container mt-4">
-        <!-- Toast (once, not twice) -->
-        <div class="toast-container position-fixed bottom-0 end-0 p-3">
-            {% if messages %}
-                {% for message in messages %}
-                <div class="toast show align-items-center text-white bg-success border-0" role="alert">
-                    <div class="d-flex">
-                        <div class="toast-body">✅ {{ message }}</div>
-                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-                    </div>
-                </div>
-                {% endfor %}
-            {% endif %}
+<nav class="navbar navbar-shamba navbar-expand-lg">
+    <div class="container">
+        <!-- Brand -->
+        <a class="navbar-brand navbar-brand-text" href="/">
+            🌱 Shamba<span>Share</span>
+        </a>
+
+        <!-- Mobile toggle -->
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span style="color:white; font-size:1.3rem;">☰</span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto ms-3 gap-1">
+                <li class="nav-item">
+                    <a href="{% url 'map_view' %}" class="nav-pill">🗺️ Find Equipment</a>
+                </li>
+                {% if request.user.is_authenticated %}
+                <li class="nav-item">
+                    <a href="{% url 'index' %}" class="nav-pill">📊 My Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'add_equipment' %}" class="nav-pill">➕ List Equipment</a>
+                </li>
+                {% endif %}
+            </ul>
+
+            <!-- Right side -->
+            <div class="d-flex align-items-center gap-2">
+                {% if request.user.is_authenticated %}
+                    <span class="nav-username">👤 {{ request.user.username }}</span>
+                    <div class="nav-divider"></div>
+                    <a href="{% url 'logout' %}" class="nav-pill">Logout</a>
+                {% else %}
+                    <a href="{% url 'login' %}" class="nav-pill">Login</a>
+                    <a href="{% url 'signup' %}" class="nav-pill-solid">Sign Up Free</a>
+                {% endif %}
+            </div>
         </div>
+    </div>
+</nav>
 
-        {% block content %}{% endblock %}
+<div class="container mt-4">
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        {% if messages %}
+            {% for message in messages %}
+            <div class="toast show align-items-center text-white bg-success border-0" role="alert">
+                <div class="d-flex">
+                    <div class="toast-body">✅ {{ message }}</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+            {% endfor %}
+        {% endif %}
     </div>
 
-    <!-- Modal stays here so it's available to the Owner dashboard -->
-    <div class="modal fade" id="orderRequestModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg rounded-4">
-                <div class="modal-body text-center p-5">
-                    <div class="mb-4"><span class="display-1">🚜</span></div>
-                    <h3 class="fw-bold mb-2">New Order Request!</h3>
-                    <p class="text-muted mb-4">
-                        <span id="renterName" class="fw-bold text-primary"></span> wants to rent your
-                        <span id="machineName" class="fw-bold text-dark"></span>.
-                    </p>
-                    <div class="d-grid gap-2">
-                        <button type="button" class="btn btn-success btn-lg rounded-pill fw-bold" onclick="acceptOrder()">
-                            Accept Request
-                        </button>
-                        <button type="button" class="btn btn-light btn-sm rounded-pill text-muted" data-bs-dismiss="modal">
-                            Decline
-                        </button>
-                    </div>
+    {% block content %}{% endblock %}
+</div>
+
+<!-- Order Request Modal -->
+<div class="modal fade" id="orderRequestModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-body text-center p-5">
+                <div class="mb-4"><span class="display-1">🚜</span></div>
+                <h3 class="fw-bold mb-2">New Order Request!</h3>
+                <p class="text-muted mb-4">
+                    <span id="renterName" class="fw-bold text-primary"></span> wants to rent your
+                    <span id="machineName" class="fw-bold text-dark"></span>.
+                </p>
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-success btn-lg rounded-pill fw-bold" onclick="acceptOrder()">
+                        Accept Request
+                    </button>
+                    <button type="button" class="btn btn-light btn-sm rounded-pill text-muted" data-bs-dismiss="modal">
+                        Decline
+                    </button>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-    {% block extra_js %}{% endblock %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+{% block extra_js %}{% endblock %}
 </body>
 </html>

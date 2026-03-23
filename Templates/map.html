@@ -28,18 +28,18 @@
 <div id="map" style="height: 600px; min-height: 600px; width: 100%; border-radius: 20px; z-index: 1;" class="shadow-lg"></div>
 
 <script>
-    var map; // Global variable
+    var map;
 
     document.addEventListener("DOMContentLoaded", function() {
         if (typeof L !== 'undefined') {
-            // 1. Initialize Map
             map = L.map('map').setView([-1.286389, 36.817223], 12);
 
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap contributors'
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/">CARTO</a>',
+                subdomains: 'abcd',
+                maxZoom: 19
             }).addTo(map);
 
-            // 2. Load Data
             var allItems = {{ equipment_json|safe }};
             var markerLayer = L.layerGroup().addTo(map);
 
@@ -51,16 +51,16 @@
                         <div style="text-align: center;">
                             <h6 class="fw-bold">${item.name}</h6>
                             <p class="text-success fw-bold">KES ${item.price}/hr</p>
-                            <button onclick="sendOrderRequest(${item.id}, '${item.name}')" 
+                            <button onclick="sendOrderRequest(${item.id}, '${item.name}')"
                                     class="btn btn-sm btn-primary rounded-pill w-100 mb-2">
-                            🚜 Order Now
+                                🚜 Order Now
                             </button>
-                            <a href="https://wa.me/${item.owner_phone}" target="_blank" class="btn btn-sm btn-outline-success rounded-pill w-100">
-                            💬 WhatsApp Owner
+                            <a href="https://wa.me/${item.owner_phone}" target="_blank"
+                               class="btn btn-sm btn-outline-success rounded-pill w-100">
+                                💬 WhatsApp Owner
                             </a>
                         </div>
                     `);
-
                     marker.addTo(markerLayer);
                 });
 
@@ -70,12 +70,9 @@
                 }
             }
 
-            // 3. Initial Display
             displayMarkers(allItems);
 
-            // 4. Active Geolocation Listeners
             map.on('locationfound', function(e) {
-                console.log("Location found!");
                 L.marker(e.latlng).addTo(map).bindPopup("You are here").openPopup();
                 L.circle(e.latlng, e.accuracy).addTo(map);
             });
@@ -84,8 +81,7 @@
                 alert("Location access denied: " + e.message);
             });
 
-            // Fix for map rendering in Bootstrap cards
-            setTimeout(function(){ map.invalidateSize()}, 500);
+            setTimeout(function(){ map.invalidateSize(); }, 500);
 
         } else {
             console.error("Leaflet (L) failed to load.");
@@ -94,17 +90,15 @@
 
     function locateUser() {
         if (map) {
-            console.log("Locate button clicked...");
             map.locate({setView: true, maxZoom: 14});
         }
     }
 
-    function sendOrderRequest(equipmentId, machineName) {  
+    function sendOrderRequest(equipmentId, machineName) {
         if (!equipmentId) {
             console.error("Error: Equipment ID is missing!");
             return;
         }
-
         fetch(`/request-order/${equipmentId}/`, {
             method: 'POST',
             headers: {
@@ -119,5 +113,54 @@
             }
         });
     }
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const socket = new WebSocket(
+        (window.location.protocol === 'https:' ? 'wss://' : 'ws://') +
+        window.location.host + '/ws/notifications/'
+    );
+
+    socket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+
+        if (data.type === 'notification_alert') {
+            const existing = document.getElementById('rental-banner');
+            if (existing) existing.remove();
+
+            const banner = document.createElement('div');
+            banner.id = 'rental-banner';
+            banner.innerHTML = `
+                <div style="
+                    position: fixed; top: 70px; left: 50%;
+                    transform: translateX(-50%);
+                    z-index: 9999; min-width: 340px; max-width: 500px;
+                ">
+                    <div class="alert alert-success shadow-lg rounded-4 d-flex align-items-center gap-3 p-4 border-0">
+                        <span style="font-size: 2rem;">🎉</span>
+                        <div>
+                            <h6 class="fw-bold mb-1">Request Accepted!</h6>
+                            <p class="mb-0 small">${data.message}</p>
+                        </div>
+                        <button type="button" class="btn-close ms-auto"
+                                onclick="document.getElementById('rental-banner').remove()">
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(banner);
+
+            setTimeout(() => {
+                const b = document.getElementById('rental-banner');
+                if (b) b.remove();
+            }, 8000);
+        }
+    };
+
+    socket.onclose = function() {
+        console.error('WebSocket closed.');
+    };
 </script>
 {% endblock %}

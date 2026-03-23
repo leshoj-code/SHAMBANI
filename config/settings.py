@@ -140,8 +140,11 @@ GEOS_LIBRARY_PATH = '/usr/lib/x86_64-linux-gnu/libgeos_c.so.1'
 
 from decouple import config
 
-MPESA_CONSUMER_KEY    = config('GOfExMe7JDeN70G6Rswo2U08UdHkFCTa8jJGnNkAFCWk6UB7')
-MPESA_CONSUMER_SECRET = config('30qL2jeMBSnNx0vJPm1DALfGCyUVCKB87vcEavQKT44UVUii8PmJyFFQSbrYjerz')
-MPESA_SHORTCODE       = config('174379')
-MPESA_PASSKEY         = config('bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919')
-MPESA_CALLBACK_URL    = config('https://yourdomain.com/mpesa/callback')
+MPESA_CONSUMER_KEY    = config('MPESA_CONSUMER_KEY')
+MPESA_CONSUMER_SECRET = config('MPESA_CONSUMER_SECRET')
+MPESA_SHORTCODE       = config('MPESA_SHORTCODE')
+MPESA_PASSKEY         = config('MPESA_PASSKEY')
+MPESA_CALLBACK_URL    = config('MPESA_CALLBACK_URL')
+
+
+LOGIN_URL = '/login/'
